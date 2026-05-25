@@ -1,11 +1,10 @@
 import streamlit as st
 import sqlite3
 
-# 1. Деректер базасын дайындау функциясы
+# Деректер базасын және кестелерді дайындау
 def init_db():
     conn = sqlite3.connect("school_data.db")
     cur = conn.cursor()
-    # Кестелерді құру
     cur.execute('CREATE TABLE IF NOT EXISTS users (username TEXT PRIMARY KEY, name TEXT, password TEXT)')
     cur.execute('CREATE TABLE IF NOT EXISTS survey_results (student TEXT, answer TEXT)')
     
@@ -19,16 +18,14 @@ def init_db():
         ("user16", "Оқушы 16", "123"), ("user17", "Оқушы 17", "123"), ("user18", "Оқушы 18", "123"),
         ("user19", "Оқушы 19", "123"), ("user20", "Оқушы 20", "123")
     ]
-    # Базаға енгізу
     for s in students:
         cur.execute("INSERT OR IGNORE INTO users VALUES (?,?,?)", s)
     conn.commit()
     conn.close()
 
-# Функцияны орындау
 init_db()
 
-# 2. Интерфейс
+# Негізгі бет
 st.title("💻 Informatics Platform")
 username = st.text_input("Логин")
 password = st.text_input("Пароль", type="password")
@@ -36,7 +33,6 @@ password = st.text_input("Пароль", type="password")
 if st.button("Кіру"):
     conn = sqlite3.connect("school_data.db")
     cur = conn.cursor()
-    # name бағанын аламыз
     user = cur.execute("SELECT name FROM users WHERE username=? AND password=?", (username, password)).fetchone()
     if user:
         st.session_state.logged_in = True
@@ -46,9 +42,11 @@ if st.button("Кіру"):
         st.error("Логин немесе пароль қате!")
     conn.close()
 
+# Сауалнама беті
 if st.session_state.get('logged_in'):
     st.write(f"Қош келдіңіз, {st.session_state.user}!")
     with st.form("survey_form"):
+        st.subheader("Оқушы сауалнамасы")
         q1 = st.radio("1. Сабаққа қызығушылығыңыз:", ["Жоғары", "Орташа", "Төмен"])
         q2 = st.radio("2. Тақырыпты түсіну деңгейі:", ["Толық түсіндім", "Орташа", "Қиын болды"])
         q3 = st.text_area("3. Не түсініксіз болды?")
