@@ -1,6 +1,34 @@
 import streamlit as st
 import sqlite3
 
+# 1. Деректер базасын дайындау функциясы
+def init_db():
+    conn = sqlite3.connect("school_data.db")
+    cur = conn.cursor()
+    # Кестелерді құру
+    cur.execute('CREATE TABLE IF NOT EXISTS users (username TEXT PRIMARY KEY, name TEXT, password TEXT)')
+    cur.execute('CREATE TABLE IF NOT EXISTS survey_results (student TEXT, answer TEXT)')
+    
+    # 20 оқушы тізімі
+    students = [
+        ("user1", "Жандәулет", "123"), ("user2", "Аружан", "123"), ("user3", "Әбубәкір", "123"),
+        ("user4", "Батырхан", "123"), ("user5", "Асылхан", "123"), ("user6", "Әмина", "123"),
+        ("user7", "Аяна", "123"), ("user8", "Айару", "123"), ("user9", "Махамбет", "123"),
+        ("user10", "Нұрхан", "123"), ("user11", "Батыр", "123"), ("user12", "Оқушы 12", "123"),
+        ("user13", "Оқушы 13", "123"), ("user14", "Оқушы 14", "123"), ("user15", "Оқушы 15", "123"),
+        ("user16", "Оқушы 16", "123"), ("user17", "Оқушы 17", "123"), ("user18", "Оқушы 18", "123"),
+        ("user19", "Оқушы 19", "123"), ("user20", "Оқушы 20", "123")
+    ]
+    # Базаға енгізу
+    for s in students:
+        cur.execute("INSERT OR IGNORE INTO users VALUES (?,?,?)", s)
+    conn.commit()
+    conn.close()
+
+# Функцияны орындау
+init_db()
+
+# 2. Интерфейс
 st.title("💻 Informatics Platform")
 username = st.text_input("Логин")
 password = st.text_input("Пароль", type="password")
@@ -8,12 +36,15 @@ password = st.text_input("Пароль", type="password")
 if st.button("Кіру"):
     conn = sqlite3.connect("school_data.db")
     cur = conn.cursor()
+    # name бағанын аламыз
     user = cur.execute("SELECT name FROM users WHERE username=? AND password=?", (username, password)).fetchone()
     if user:
         st.session_state.logged_in = True
         st.session_state.user = user[0]
         st.rerun()
-    else: st.error("Қате!")
+    else: 
+        st.error("Логин немесе пароль қате!")
+    conn.close()
 
 if st.session_state.get('logged_in'):
     st.write(f"Қош келдіңіз, {st.session_state.user}!")
@@ -27,7 +58,8 @@ if st.session_state.get('logged_in'):
         if st.form_submit_button("Жіберу"):
             conn = sqlite3.connect("school_data.db")
             cur = conn.cursor()
-            ans = f"Қызығу: {q1}; Түсіну: {q2}; Сұрақ: {q3}; Қиындық: {q4}; Түсіндіру: {q5}"
+            ans = f"Қызығу:{q1}; Түсіну:{q2}; Сұрақ:{q3}; Қиындық:{q4}; Түсіндіру:{q5}"
             cur.execute("INSERT INTO survey_results VALUES (?,?)", (st.session_state.user, ans))
             conn.commit()
+            conn.close()
             st.success("Жауабыңыз жіберілді!")
